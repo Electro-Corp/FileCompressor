@@ -25,7 +25,7 @@ void* s_realloc(void* ptr, size_t newSize);
 void s_free(void* location);
 
 // Track some memory
-void addAllocatedMemory(AllocatedMemory mem);
+void addAllocatedMemory(AllocatedMemory* mem);
 
 // Done
 void removeAllocatedMemory(void* location);

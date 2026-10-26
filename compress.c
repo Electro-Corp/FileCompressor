@@ -96,6 +96,7 @@ int compare(const void* a, const void* b){
 
 // Compress a file
 void compress(FILE* in, FILE* out){
+    printf("[Compressor] Preparing to compress file...\n", in);
     // Get length of file
     int length = lengthOfFile(in);
     // Read file
@@ -103,11 +104,11 @@ void compress(FILE* in, FILE* out){
     // Create output
     char* output = (char*) s_malloc(length);
 
+    // Track nodes
     int headsCreated = 0, nodesCreated = 0;
-
     // Create tree
     for(int i = 0; i < length - 1; i++){
-        printf("%d/%d\n", i, length - 1);
+        printf("[Compressor] Creating tree... (%d percent complete...)\r", (int)((float)((float)i / (float)length) * 100.0));
         // Look at nodes and see if we have one for the current byte
         Node* root = getHead(inputBuffer[i]);
         if(root == NULL){
@@ -127,17 +128,20 @@ void compress(FILE* in, FILE* out){
         }
     }
     
-    printf("[Compressor] Tree Created (%d heads, %d nodes)...\n", headsCreated, nodesCreated);
-
+    printf("\n[Compressor] Tree Created (%d heads, %d nodes)...\n", headsCreated, nodesCreated);
+    printf("[Compressor] Starting pattern analysis...\n");
     // Find patterns that are PATTERN_SIZE long (most intensive part)
     for(int i = 0; i < 256; i++){
+        printf("[Compressor] Analyzing... (%d percent complete...)\r", (int)((float)((float)i / (float)256) * 100.0));
         // Does a head exist at this pos?
         if(getHead(i) != NULL){
             Node* root = getHead(i);
             // Loop through the sub nodes and find a tree thats longer than PATTERN_SIZE
-
+            
         }
     }
+
+    printf("\n[Compressor] Pattern Analysis completed.\n");
 
     //printf("Tokens generated: %d\n", indicator);
     //table.maxToken = indicator;
