@@ -1,0 +1,4 @@
+.vscode
+testFiles
+*.o
+compress.exe
