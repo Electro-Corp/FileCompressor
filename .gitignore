@@ -2,3 +2,4 @@
 testFiles
 *.o
 compress.exe
+compile.sh

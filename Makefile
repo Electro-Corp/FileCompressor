@@ -1,5 +1,5 @@
 CXX = gcc
-CXXFLAGS = -g -O0
+CXXFLAGS = -g -O3
 
 # The first target is the default one executed when you just type 'make'
 all: compress

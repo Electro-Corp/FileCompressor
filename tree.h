@@ -5,23 +5,28 @@
 #define TREE_H
 
 #include <stddef.h>
+#include <stdio.h>
 #include "mem.h"
+#include "config.h"
 
 typedef struct Node{
-    char value;
+    unsigned char value;
+    int freq;
     int childCount;
     struct Node** children;
 } Node;
 
 // Creates a sub node of parent with value. If parent is null, head is created
-Node* create_sub_node(Node* parent, char value);
+Node* create_sub_node(Node* parent, unsigned char value);
 
 // Check if a node has a child with the value
-int does_node_have_child(Node* node, char value);
+int does_node_have_child(Node* node, unsigned char value);
 
-// Checks if a node has a depth of length
-char* find_nodes_of_length(Node* node, int length);
+// Traverse a chain of nodes 
+char* traverse_node(Node* node);
 
+// Purge all nodes that have under min freq
+unsigned long purge_nodes_under(Node* node, int min);
 
 // Get head at index
 Node* getHead(int i);

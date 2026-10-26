@@ -118,13 +118,21 @@ void addAllocatedMemory(AllocatedMemory* mem){
 // Done
 void removeAllocatedMemory(void* location){
     for(int i = 0; i < allocationListSize; i++){
-        if(currentlyAllocatedMemory[i]->ptr = location){
-            firstAvaliableMemory = i;
-            currentlyAllocatedMemory[i]->active = 0;
-            totalMemoryAllocated -= currentlyAllocatedMemory[i]->size;
-            break;
-        }
+        if(currentlyAllocatedMemory[i] != NULL){
+            if(currentlyAllocatedMemory[i]->ptr == location){
+                totalMemoryAllocated -= currentlyAllocatedMemory[i]->size;
+                if(firstAvaliableMemory > i) firstAvaliableMemory = i;
+                currentlyAllocatedMemory[i]->active = 0;
+                break;
+            }
+        }   
     }
+}
+
+// Debug info
+void printMmeoryDebugInfo(){
+    printf("======= MEMORY INFO ======:\n");
+    printf("Total memory allocated: %lu, Allocation List Size: %d, First Block Ready: %d\n", totalMemoryAllocated, allocationListSize, firstAvaliableMemory);
 }
 
 // Clear all memory

@@ -30,6 +30,9 @@ void addAllocatedMemory(AllocatedMemory* mem);
 // Done
 void removeAllocatedMemory(void* location);
 
+// Debug info
+void printMmeoryDebugInfo();
+
 // Quit
 void memQuit();
 

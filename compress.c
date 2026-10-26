@@ -1,22 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "config.h"
 #include "tree.h"
 #include "mem.h"
 
-#define SEARCH_DEPTH 15
-#define PATTERN_SIZE 4
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 // Print usage
 void usage();
 // Get length of file
-int lengthOfFile(FILE* fp);
+unsigned long lengthOfFile(FILE* fp);
 // Read a file into a buffer (allocates memory but does NOT free it for you)
-char* readFileIntoBuffer(FILE* fp, int length);
-// qsort compare function for frequency table
-int compare(const void* a, const void* b);
+unsigned char* readFileIntoBuffer(FILE* fp, int length);
 // I dare you to guess what this does
 void compress(FILE* in, FILE* out);
 // Take a wild guess
@@ -73,42 +70,35 @@ int main(int argv, char** args){
 }
 
 // Get length of file
-int lengthOfFile(FILE* fp){
+unsigned long lengthOfFile(FILE* fp){
     fseek(fp, 0L, SEEK_END);
-    int length = ftell(fp);
+    unsigned long length = ftell(fp);
     rewind(fp);
     return length;
 }
 
 // Read a file into a buffer (allocates memory but does NOT free it for you)
-char* readFileIntoBuffer(FILE* fp, int length){
-    char* buffer = (char*) s_malloc(sizeof(char) * length); 
-    fread(buffer, sizeof(char), length, fp);
+unsigned char* readFileIntoBuffer(FILE* fp, int length){
+    unsigned char* buffer = (unsigned char*) s_malloc(sizeof(char) * length); 
+    fread(buffer, sizeof(unsigned char), length, fp);
     return buffer;
-}
-
-// qsort compare function for frequency table
-int compare(const void* a, const void* b){
-    if(*(int*)a < *(int*)b) return 1;
-    else if(*(int*)a > *(int*)b) return -1;
-    return 0;
 }
 
 // Compress a file
 void compress(FILE* in, FILE* out){
-    printf("[Compressor] Preparing to compress file...\n", in);
     // Get length of file
-    int length = lengthOfFile(in);
+    unsigned long length = lengthOfFile(in);
+    printf("[Compressor] Preparing to compress file... (%lu bytes, with a search depth of %d)\n", length, SEARCH_DEPTH);
     // Read file
-    char* inputBuffer = readFileIntoBuffer(in, length);
+    unsigned char* inputBuffer = readFileIntoBuffer(in, length);
     // Create output
-    char* output = (char*) s_malloc(length);
+    unsigned char* output = (unsigned char*) s_malloc(length);
 
     // Track nodes
     int headsCreated = 0, nodesCreated = 0;
     // Create tree
-    for(int i = 0; i < length - 1; i++){
-        printf("[Compressor] Creating tree... (%d percent complete...)\r", (int)((float)((float)i / (float)length) * 100.0));
+    for(unsigned long i = 0; i < length - 1; i++){
+        printf("[Compressor] Creating tree... (%d percent complete...) [%lu KB processed of %lu KB]\r", (int)((float)((float)i / (float)length) * 100.0), i / 1000, (length - 1) / 1000);
         // Look at nodes and see if we have one for the current byte
         Node* root = getHead(inputBuffer[i]);
         if(root == NULL){
@@ -117,18 +107,34 @@ void compress(FILE* in, FILE* out){
             headsCreated++;
         }
         // Start going down the chain
-        for(int j = i + 1; j < MIN(i + SEARCH_DEPTH, length); j++){
+        for(unsigned long j = i + 1; j < MIN(i + SEARCH_DEPTH, length); j++){
             int idx = does_node_have_child(root, inputBuffer[j]);
             if(idx < 0){
                 root = create_sub_node(root, inputBuffer[j]);
                 nodesCreated++;
             }else{
+                root->freq++;
                 root = root->children[idx];
             }
         }
     }
-    
-    printf("\n[Compressor] Tree Created (%d heads, %d nodes)...\n", headsCreated, nodesCreated);
+    printf("[Compressor] Creating tree... (100 percent complete...)\n");
+    printf("[Compressor] Tree Created (%d heads, %d nodes)...\n", headsCreated, nodesCreated);
+
+    unsigned long purged = 0;
+
+    // Purge nodes under PATTERN_SIZE
+    for(int i = 0; i < 256; i++){
+        printf("[Compressor] Purging... (%d percent complete...)\r", (int)((float)((float)i / (float)256) * 100.0));
+        // Does a head exist at this pos?
+        Node* node = getHead(i);
+        if(node != NULL){
+            Node* node = getHead(i);
+            purged += purge_nodes_under(node, PATTERN_SIZE);
+        }
+    }
+    printf("[Compressor] Purged... (100 percent complete, %lu nodes purged of our %lu original nodes)\n", purged, nodesCreated);
+
     printf("[Compressor] Starting pattern analysis...\n");
     // Find patterns that are PATTERN_SIZE long (most intensive part)
     for(int i = 0; i < 256; i++){
@@ -140,8 +146,8 @@ void compress(FILE* in, FILE* out){
             
         }
     }
-
-    printf("\n[Compressor] Pattern Analysis completed.\n");
+    printf("[Compressor] Analyzing... (100 percent complete...)\n");
+    printf("[Compressor] Pattern Analysis completed.\n");
 
     //printf("Tokens generated: %d\n", indicator);
     //table.maxToken = indicator;
