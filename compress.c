@@ -4,6 +4,11 @@
 #include "tree.h"
 #include "mem.h"
 
+#define SEARCH_DEPTH 15
+#define PATTERN_SIZE 4
+
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 // Print usage
 void usage();
 // Get length of file
@@ -18,7 +23,7 @@ void compress(FILE* in, FILE* out);
 void uncompress(FILE* in, FILE* out);
 
 typedef struct {
-    char original;
+    char original[PATTERN_SIZE];
     unsigned char out;
 } Key;
 
@@ -72,7 +77,6 @@ int lengthOfFile(FILE* fp){
     fseek(fp, 0L, SEEK_END);
     int length = ftell(fp);
     rewind(fp);
-    printf("length of file: %d\n", length);
     return length;
 }
 
@@ -98,31 +102,48 @@ void compress(FILE* in, FILE* out){
     char* inputBuffer = readFileIntoBuffer(in, length);
     // Create output
     char* output = (char*) s_malloc(length);
-    // Intermedite format
+
+    int headsCreated = 0, nodesCreated = 0;
+
+    // Create tree
+    for(int i = 0; i < length - 1; i++){
+        printf("%d/%d\n", i, length - 1);
+        // Look at nodes and see if we have one for the current byte
+        Node* root = getHead(inputBuffer[i]);
+        if(root == NULL){
+            // Head doesn't exist, create it
+            root = create_sub_node(NULL, inputBuffer[i]);
+            headsCreated++;
+        }
+        // Start going down the chain
+        for(int j = i + 1; j < MIN(i + SEARCH_DEPTH, length); j++){
+            int idx = does_node_have_child(root, inputBuffer[j]);
+            if(idx < 0){
+                root = create_sub_node(root, inputBuffer[j]);
+                nodesCreated++;
+            }else{
+                root = root->children[idx];
+            }
+        }
+    }
     
+    printf("[Compressor] Tree Created (%d heads, %d nodes)...\n", headsCreated, nodesCreated);
 
-    // Create our Table
-    Table table;
-    // Keep track of our current indicator
-    char indicator = 0;
+    // Find patterns that are PATTERN_SIZE long (most intensive part)
+    for(int i = 0; i < 256; i++){
+        // Does a head exist at this pos?
+        if(getHead(i) != NULL){
+            Node* root = getHead(i);
+            // Loop through the sub nodes and find a tree thats longer than PATTERN_SIZE
 
-    // Process
-    for(int i = 0; i < length; i++){
-        // Do we have
-        char c = inputBuffer[i];
-        if(table.keys[c].original == NULL){
-            table.keys[c].original = c;
-            table.keys[c].out = indicator++;
-        } 
-        // Output
-        output[i] = table.keys[c].out;
+        }
     }
 
-    printf("Tokens generated: %d\n", indicator);
-    table.maxToken = indicator;
+    //printf("Tokens generated: %d\n", indicator);
+    //table.maxToken = indicator;
     
-    fwrite(&table, sizeof(Table), 1, out);
-    fwrite(output, sizeof(char), length, out);
+    //fwrite(&table, sizeof(Table), 1, out);
+    //fwrite(output, sizeof(char), length, out);
 
     // We done
     s_free(inputBuffer);
@@ -150,7 +171,7 @@ void uncompress(FILE* in, FILE* out){
         char token = inputBuffer[k];
         for(int i = 0; i < 256; i++){
             if(table.keys[i].out == token){
-                output[k - sizeof(Table)] = table.keys[i].original;
+                //output[k - sizeof(Table)] = table.keys[i].original;
                 break;
             }
         }

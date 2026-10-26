@@ -2,6 +2,7 @@
     Compressor memory manager
 */
 #include <stdlib.h>
+#include <stdio.h>
 #include "mem.h"
 
 // Tracking for memory
@@ -12,6 +13,9 @@ static int firstAvaliableMemory = 0, allocationListSize = 0;
 
 // Safely allocate memory that will be tracked
 void* s_malloc(size_t size){
+    printf("======= MEMORY ALLOCATION REQUEST ======:\n");
+    printf("Total memory allocated: %d, Allocation List Size: %d, First Block Ready: %d\n", totalMemoryAllocated, allocationListSize, firstAvaliableMemory);
+    printf("Just requested memory: %d\n", size);
     // Allocate the memory through the kernel
     void* memory = malloc(size);
     // Track it
@@ -27,6 +31,9 @@ void* s_malloc(size_t size){
 
 // Safely reallocate memory...
 void* s_realloc(void* ptr, size_t newSize){
+    printf("======= MEMORY REALLOCATION REQUEST ======:\n");
+    printf("Total memory allocated: %d, Allocation List Size: %d, First Block Ready: %d\n", totalMemoryAllocated, allocationListSize, firstAvaliableMemory);
+    printf("Just requested memory: %d\n", newSize);
     realloc(ptr, newSize);
     // Update internally
     for(int i = 0; i < allocationListSize; i++){
@@ -40,6 +47,8 @@ void* s_realloc(void* ptr, size_t newSize){
 
 // Free some memory
 void s_free(void* location){
+    printf("======= MEMORY FREE REQUEST ======:\n");
+    printf("Total memory allocated: %d, Allocation List Size: %d, First Block Ready: %d\n", totalMemoryAllocated, allocationListSize, firstAvaliableMemory);
     free(location);
     removeAllocatedMemory(location);
 }
@@ -65,7 +74,10 @@ void addAllocatedMemory(AllocatedMemory mem){
             }
         }
         if(!found){
-            // TODO: realloc
+            currentlyAllocatedMemory = realloc(currentlyAllocatedMemory, sizeof(AllocatedMemory) * (allocationListSize + 5));
+            currentlyAllocatedMemory[allocationListSize + 1] = mem;
+            firstAvaliableMemory = allocationListSize + 2;
+            allocationListSize += 5;
         }
     }else{
         currentlyAllocatedMemory = realloc(currentlyAllocatedMemory, sizeof(AllocatedMemory) * (allocationListSize + 5));
