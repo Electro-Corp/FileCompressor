@@ -129,6 +129,10 @@ void removeAllocatedMemory(void* location){
     }
 }
 
+size_t getTotalMemoryUsed(){
+    return totalMemoryAllocated;
+}
+
 // Debug info
 void printMmeoryDebugInfo(){
     printf("======= MEMORY INFO ======:\n");

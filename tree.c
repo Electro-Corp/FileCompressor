@@ -55,19 +55,33 @@ char* traverse_node(Node* node){
 }
 
 // Purge all nodes that have under min freq
-unsigned long purge_nodes_under(Node* node, int min){
+unsigned long purge_nodes_under(Node* node, unsigned long min){
     unsigned long purgedNodes = 0;
 
     if(node->freq < min){
+        // Purge everything underneath us indecriminatly 
+        for(unsigned long i = 0; i < node->childCount; i++){
+            purgedNodes += purge_nodes_under(node->children[i], ULONG_MAX);
+        }
+        purgedNodes++;
         s_free(node);
-        return 1;
+        return purgedNodes;
     }
 
-    for(int i = 0; i < node->childCount; i++){
+    for(unsigned long i = 0; i < node->childCount; i++){
         purgedNodes += purge_nodes_under(node->children[i], min);
     }
 
     return purgedNodes;
+}
+
+// Print out all chains from node
+void print_all_chains(Node* node){
+    for(int i = 0; i < node->childCount; i++){
+        printf("(%d, %d) ->", node->value, node->freq);
+        print_all_chains(node->children[i]);
+    }
+    printf("\n");
 }
 
 Node* getHead(int i){

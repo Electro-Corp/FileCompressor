@@ -1,2 +1,3 @@
 #define SEARCH_DEPTH 15
 #define PATTERN_SIZE 4
+#define MIN_FREQ 10

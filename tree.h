@@ -6,13 +6,14 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <limits.h>
 #include "mem.h"
 #include "config.h"
 
 typedef struct Node{
     unsigned char value;
-    int freq;
-    int childCount;
+    unsigned long freq;
+    unsigned long childCount;
     struct Node** children;
 } Node;
 
@@ -23,10 +24,13 @@ Node* create_sub_node(Node* parent, unsigned char value);
 int does_node_have_child(Node* node, unsigned char value);
 
 // Traverse a chain of nodes 
-char* traverse_node(Node* node);
+char* get_patterns(Node* node);
+
+// Print out all chains from node
+void print_all_chains(Node* node);
 
 // Purge all nodes that have under min freq
-unsigned long purge_nodes_under(Node* node, int min);
+unsigned long purge_nodes_under(Node* node, unsigned long min);
 
 // Get head at index
 Node* getHead(int i);

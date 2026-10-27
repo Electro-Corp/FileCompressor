@@ -33,6 +33,8 @@ void removeAllocatedMemory(void* location);
 // Debug info
 void printMmeoryDebugInfo();
 
+size_t getTotalMemoryUsed();
+
 // Quit
 void memQuit();
 

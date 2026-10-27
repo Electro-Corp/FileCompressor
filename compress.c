@@ -41,6 +41,7 @@ int main(int argv, char** args){
 
     if(!input){
         printf("Fatal: Cannot open %s! Quitting.\n", args[2]);
+        exit(-1);
     }
 
     // Open Output 
@@ -121,19 +122,21 @@ void compress(FILE* in, FILE* out){
     printf("[Compressor] Creating tree... (100 percent complete...)\n");
     printf("[Compressor] Tree Created (%d heads, %d nodes)...\n", headsCreated, nodesCreated);
 
-    unsigned long purged = 0;
+    unsigned long purged = 0, lastMemory = getTotalMemoryUsed();;
 
-    // Purge nodes under PATTERN_SIZE
+    // Purge nodes under MIN_FREQ
     for(int i = 0; i < 256; i++){
-        printf("[Compressor] Purging... (%d percent complete...)\r", (int)((float)((float)i / (float)256) * 100.0));
+        printf("[Compressor] Purging nodes with frequency under %d... (%d percent complete...)\r", MIN_FREQ, (int)((float)((float)i / (float)256) * 100.0));
         // Does a head exist at this pos?
         Node* node = getHead(i);
         if(node != NULL){
             Node* node = getHead(i);
-            purged += purge_nodes_under(node, PATTERN_SIZE);
+            purged += purge_nodes_under(node, MIN_FREQ);
         }
     }
-    printf("[Compressor] Purged... (100 percent complete, %lu nodes purged of our %lu original nodes)\n", purged, nodesCreated);
+    printf("[Compressor] Purging nodes with frequency under %d... (100 percent complete...)\n", MIN_FREQ);
+    printf("[Compressor] Purging complete (%lu nodes purged, %lu nodes left to analyze)\n", purged, nodesCreated - purged);
+    printf("[Compressor] Memory usaged dropped from %lu KB to %lu KB\n", lastMemory / 1000, getTotalMemoryUsed() / 1000);
 
     printf("[Compressor] Starting pattern analysis...\n");
     // Find patterns that are PATTERN_SIZE long (most intensive part)
